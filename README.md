@@ -13,3 +13,4 @@ Data for VPN:
 bastion_IP = 35.197.233.194 
 someinternalhost_IP = 10.132.0.2
 
+
