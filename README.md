@@ -5,7 +5,7 @@
 ### Начальные данные
 * bastion
  * Пользователь: appuser
- * External IP: 35.197.233.194
+ * External IP: 35.234.130.53
  * Internal IP: 10.154.0.2
 * someinternalhost
   * Пользователь: appuser
@@ -24,7 +24,7 @@ OpenSSH_7.6p1 Ubuntu-4, OpenSSL 1.0.2n  7 Dec 2017
 ```
 Пример подключения из командной строки
 ```bash
-$ ssh -i ~/.ssh/appuser -J appuser@35.197.233.194 appuser@someinternalhost
+$ ssh -i ~/.ssh/appuser -J appuser@35.234.130.53 appuser@someinternalhost
 Welcome to Ubuntu 16.04.4 LTS (GNU/Linux 4.13.0-1019-gcp x86_64)
 
  * Documentation:  https://help.ubuntu.com
@@ -54,7 +54,7 @@ $ if ssh -J 2>&1 | grep "unknown option -- J" >/dev/null; then PROXY_COMMAND='Pr
 $ cat <<EOF>>~/.ssh/config
 
 host bastion
-HostName 35.197.233.194
+HostName 35.234.130.53
 
 host someinternalhost
   HostName someinternalhost
@@ -88,5 +88,5 @@ appuser@someinternalhost:~$
 
 На **bastion** установлен и настроен pritunl VPN сервер. Для подключения к VPN нужно импортировать конфигурационный файл **cloud-bastion.ovpn** в OpenVPN клиент.
 
-bastion_IP = 35.197.233.194
+bastion_IP = 35.234.130.53
 someinternalhost_IP = 10.132.0.2
