@@ -8,6 +8,6 @@ sudo systemctl start mongod
 sudo systemctl enable mongod
 
 
-git clone -b monolith https://github.com/express42/reddit.git /home/overmind88/reddit
-cd /home/overmind88/reddit && bundle install
+git clone -b monolith https://github.com/express42/reddit.git /home/appuser/reddit
+cd /home/appuser/reddit && bundle install
 puma -d
