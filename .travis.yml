@@ -1,6 +1,7 @@
 dist: trusty
 sudo: required
 language: bash
+cache: false
 before_install:
 - curl https://raw.githubusercontent.com/express42/otus-homeworks/2018-05/run.sh |
   bash
