@@ -90,3 +90,21 @@ appuser@someinternalhost:~$
 
 bastion_IP = 35.234.130.53
 someinternalhost_IP = 10.132.0.2
+
+#ДЗ №4
+
+testapp_IP = 35.233.15.239 testapp_port = 9292
+
+Команда для добавления правила файрволла: gcloud compute firewall-rules create puma-default-server --target-tags="puma-server" --source-ranges="0.0.0.0/0" --allow tcp:9292
+
+Команда для запуска со startup-скриптом:
+
+gcloud compute instances create reddit-app-2\
+  --boot-disk-size=10GB \
+  --image-family ubuntu-1604-lts \
+  --image-project=ubuntu-os-cloud \
+  --machine-type=g1-small \
+  --tags puma-server \
+  --restart-on-failure \
+  --metadata-from-file startup-script=startup.sh
+  
