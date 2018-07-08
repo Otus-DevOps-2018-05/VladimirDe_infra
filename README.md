@@ -109,3 +109,22 @@ gcloud compute instances create reddit-app-2\
   --restart-on-failure \
   --metadata-from-file startup-script=startup.sh
   
+Сборка образов VM при помощи packer
+Чтобы собрать образ VM нужно переименовать файл packer/variables.json.example и настроить в нем переменные gcp_project_id, gcp_source_image_family
+
+mv packer/variables.json{.example,}
+После этого образ reddit-base можно собрать командами
+
+cd packer && packer validate -var-file=variables.json ubuntu16.json && packer build -var-file=variables.json  ubuntu16.json
+и аналогично reddit-full
+
+cd packer && packer validate -var-file=variables.json immutable.json && packer build -var-file=variables.json  immutable.json
+после этого, создать и запустить инстанс можно скриптом create-reddit-vm.sh (по-умолчанию используется образ reddit-full)
+
+config-scripts/create-reddit-vm.sh
+чтобы использовать другой образ его нужно указать через ключ командной строки, например -i reddit-base
+
+config-scripts/create-reddit-vm.sh -i reddit-base
+...
+config-scripts/create-reddit-vm.sh -h
+Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]
