@@ -1,0 +1,14 @@
+[Unit]
+Description=Reddit like application service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/appuser/reddit
+ExecStart=/usr/local/bin/puma
+User=appuser
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,54 @@
+{
+    "variables": {
+      "gcp_project_id": null,
+      "gcp_machine_type": "f1-micro",
+      "gcp_image_description": "reddit-app full immutable image builded via packer (otus homework)",
+      "gcp_disk_type": "pd-standard",
+      "gcp_disk_size": "10",
+      "gcp_network": "default",
+      "gcp_tags": "puma-server",
+      "app_name": "reddit",
+      "app_repo": "https://github.com/express42/reddit.git",
+      "app_branch": "monolith"
+
+    },
+    "builders": [
+        {
+            "type": "googlecompute",
+            "project_id": "{{user `gcp_project_id`}}",
+            "image_name": "reddit-full-{{timestamp}}",
+            "image_family": "reddit-full",
+            "source_image_family": "reddit-base",
+            "zone": "europe-west1-b",
+            "ssh_username": "appuser",
+            "machine_type": "{{user `gcp_machine_type`}}",
+            "image_description": "{{user `gcp_image_description`}}",
+            "disk_type": "{{user `gcp_disk_type`}}",
+            "disk_size": "{{user `gcp_disk_size`}}",
+            "network": "{{user `gcp_network`}}",
+            "tags": "{{user `gcp_tags`}}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+              "git clone --branch {{user `app_branch`}} {{user `app_repo`}}",
+              "cd reddit {{user `app_name`}} && bundle install"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "files/{{user `app_name`}}.service",
+            "destination": "{{user `app_name`}}.service"
+        },
+        {
+            "type": "shell",
+            "inline": [
+              "sudo install --owner=root --group=root --mode=0644 {{user `app_name`}}.service /etc/systemd/system/{{user `app_name`}}.service",
+              "sudo systemctl daemon-reload",
+              "sudo systemctl enable {{user `app_name`}}.service"
+            ]
+        }
+    ]
+}
