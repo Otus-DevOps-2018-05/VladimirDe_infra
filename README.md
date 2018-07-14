@@ -109,7 +109,8 @@ testapp_port = 9292
   --restart-on-failure \
   --metadata-from-file startup-script=startup.sh>'
   
-Сборка образов VM при помощи packer
+
+# Сборка образов VM при помощи packer
 Чтобы собрать образ VM нужно переименовать файл packer/variables.json.example и настроить в нем переменные gcp_project_id, gcp_source_image_family
 
 '<mv packer/variables.json{.example,}>'
@@ -123,8 +124,53 @@ testapp_port = 9292
 
 config-scripts/create-reddit-vm.sh
 чтобы использовать другой образ его нужно указать через ключ командной строки, например -i reddit-base
-
-'<config-scripts/create-reddit-vm.sh -i reddit-base
+```
+<config-scripts/create-reddit-vm.sh -i reddit-base
 ...
 config-scripts/create-reddit-vm.sh -h
-Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>'
+Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>
+```
+
+# Практика IaC с использованием Terraform
+При использовании IaC есть проблема - больше нельзя вносить изменения в инфраструктуру вручную, т.е. IaC используется или всегда или никогда. Все изменения сделанные вручную "невидимы" для Терраформа.
+
+## Настройка HTTP балансировщика для пары хостов reddit-app, reddit-app2
+После добавления reddit-app2 и настройки http балансировщика через terraform есть проблема, которая заключается в том, что приложение reddit-app это statefull приложение, т.е. у него есть состояние (мы храним его в mongodb), которое балансировка не учитывает. В этом легко убедиться, если создать статью и сравнить БД на reddit-app и reddit-app2:
+```
+reddit-app:~# mongo
+MongoDB shell version: 3.2.20
+connecting to: test
+> show dbs
+local  0.000GB``
+>
+
+reddit-app2:~# mongo
+MongoDB shell version: 3.2.20
+connecting to: test
+> show dbs
+local       0.000GB
+user_posts  0.000GB
+>
+```
+
+т.е. пользователь будет получать разный ответ в зависимости от того, на какой бэкенд он попал. Решения:
+- убрать mongodb с app серверов и перевести его на отдельный сервер БД
+- включить репликацию между серверами mongo.
+
+## Количество app серверов настраивается переменной count (по-умолчанию она равна 1) в файле terraform.tfvars Например, если задать
+
+count = 4
+то будет создано 4 инстанса reddit-app-001, reddit-app-002, reddit-app-003б reddit-app-004
+
+При этом после выполнения команды
+
+```terraform apply```
+будут выведены ip адреса каждого инстанса и ip адрес loadbalancer
+
+app_external_ip = [
+    reddit-app-001-ip-address-here,
+    reddit-app-002-ip-address-here,
+    reddit-app-003-ip-address-here
+    reddit-app-004-ip-address-here    
+]
+lb_app_external_ip = loadbalancer-ip-address-here
