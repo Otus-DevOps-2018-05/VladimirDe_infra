@@ -124,11 +124,12 @@ testapp_port = 9292
 
 config-scripts/create-reddit-vm.sh
 чтобы использовать другой образ его нужно указать через ключ командной строки, например -i reddit-base
-
-```'<config-scripts/create-reddit-vm.sh -i reddit-base
+```
+<config-scripts/create-reddit-vm.sh -i reddit-base
 ...
 config-scripts/create-reddit-vm.sh -h
-Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>'```
+Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>
+```
 
 # Практика IaC с использованием Terraform
 При использовании IaC есть проблема - больше нельзя вносить изменения в инфраструктуру вручную, т.е. IaC используется или всегда или никогда. Все изменения сделанные вручную "невидимы" для Терраформа.
@@ -140,7 +141,7 @@ reddit-app:~# mongo
 MongoDB shell version: 3.2.20
 connecting to: test
 > show dbs
-local  0.000GB
+local  0.000GB``
 >
 
 reddit-app2:~# mongo
@@ -149,7 +150,8 @@ connecting to: test
 > show dbs
 local       0.000GB
 user_posts  0.000GB
->```
+>
+```
 
 т.е. пользователь будет получать разный ответ в зависимости от того, на какой бэкенд он попал. Решения:
 - убрать mongodb с app серверов и перевести его на отдельный сервер БД
