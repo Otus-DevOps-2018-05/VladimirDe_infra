@@ -65,7 +65,7 @@ ${PROXY_COMMAND}
 EOF
 
 ```
-Проверка подключения через alias **someinternalhost**
+### Проверка подключения через alias **someinternalhost**
 ```bash
 $ ssh someinternalhost
 Welcome to Ubuntu 16.04.4 LTS (GNU/Linux 4.13.0-1019-gcp x86_64)
@@ -91,13 +91,51 @@ appuser@someinternalhost:~$
 bastion_IP = 35.234.130.53
 someinternalhost_IP = 10.132.0.2
 
+# ДЗ №4
+
+testapp_IP = 35.233.15.239
+testapp_port = 9292
+
+Команда для добавления правила файрволла: gcloud compute firewall-rules create puma-default-server --target-tags="puma-server" --source-ranges="0.0.0.0/0" --allow tcp:9292
+
+Команда для запуска со startup-скриптом:
+
+'<gcloud compute instances create reddit-app-2\
+  --boot-disk-size=10GB \
+  --image-family ubuntu-1604-lts \
+  --image-project=ubuntu-os-cloud \
+  --machine-type=g1-small \
+  --tags puma-server \
+  --restart-on-failure \
+  --metadata-from-file startup-script=startup.sh>'
+
+Сборка образов VM при помощи packer
+Чтобы собрать образ VM нужно переименовать файл packer/variables.json.example и настроить в нем переменные gcp_project_id, gcp_source_image_family
+
+'<mv packer/variables.json{.example,}>'
+После этого образ reddit-base можно собрать командами
+
+'<cd packer && packer validate -var-file=variables.json ubuntu16.json && packer build -var-file=variables.json  ubuntu16.json>'
+и аналогично reddit-full
+
+'<cd packer && packer validate -var-file=variables.json immutable.json && packer build -var-file=variables.json  immutable.json>'
+после этого, создать и запустить инстанс можно скриптом create-reddit-vm.sh (по-умолчанию используется образ reddit-full)
+
+config-scripts/create-reddit-vm.sh
+чтобы использовать другой образ его нужно указать через ключ командной строки, например -i reddit-base
+
+'<config-scripts/create-reddit-vm.sh -i reddit-base
+...
+config-scripts/create-reddit-vm.sh -h
+Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>'
+
 # Практика IaC с использованием Terraform
 При использовании IaC есть проблема - больше нельзя вносить изменения в инфраструктуру вручную, т.е. IaC используется или всегда или никогда. Все изменения сделанные вручную "невидимы" для Терраформа.
 
 ## Настройка HTTP балансировщика для пары хостов reddit-app, reddit-app2
 После добавления reddit-app2 и настройки http балансировщика через terraform есть проблема, которая заключается в том, что приложение reddit-app это statefull приложение, т.е. у него есть состояние (мы храним его в mongodb), которое балансировка не учитывает. В этом легко убедиться, если создать статью и сравнить БД на reddit-app и reddit-app2:
 
-``` 
+```
 reddit-app:~# mongo
 MongoDB shell version: 3.2.20
 connecting to: test
