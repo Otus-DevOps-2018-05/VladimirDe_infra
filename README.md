@@ -135,7 +135,7 @@ Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>'
 ## Настройка HTTP балансировщика для пары хостов reddit-app, reddit-app2
 После добавления reddit-app2 и настройки http балансировщика через terraform есть проблема, которая заключается в том, что приложение reddit-app это statefull приложение, т.е. у него есть состояние (мы храним его в mongodb), которое балансировка не учитывает. В этом легко убедиться, если создать статью и сравнить БД на reddit-app и reddit-app2:
 
-```
+```bash
 reddit-app:~# mongo
 MongoDB shell version: 3.2.20
 connecting to: test
@@ -150,7 +150,8 @@ connecting to: test
 local       0.000GB
 user_posts  0.000GB
 >
-```
+```bash
+
 т.е. пользователь будет получать разный ответ в зависимости от того, на какой бэкенд он попал. Решения:
 
 - убрать mongodb с app серверов и перевести его на отдельный сервер БД
@@ -164,3 +165,43 @@ terraform apply будут выведены ip адреса каждого ин�
 
 app_external_ip = [ reddit-app-001-ip-address-here, reddit-app-002-ip-address-here, reddit-app-003-ip-address-here reddit-app-004-ip-address-here
 ] lb_app_external_ip = loadbalancer-ip-address-here
+
+# ДЗ 8 Terraform-2
+## Как запустить проект
+Исходное состояние: установлены terraform (проверено на версии v0.11.7), packer (проверено на версии 1.2.4) с доступом к GCP
+
+Создать образы reddit-app, reddit-db через packer, предварительно настроив variables.json
+```bash
+cd packer
+cp variables.json{.example,}
+#configure variables.json here
+packer build -var-file=variables.json db.json
+packer build -var-file=variables.json app.json
+```
+cd -
+Создать бакеты для хранения state файла terraform, предварительно настроив terraform.tfvars
+
+```bash
+cd terraform
+cp terraform.tfvars{.example,}
+#configure terraform.tfvars here
+terraform init
+terraform apply -auto-approve
+```bash
+
+Создать prod/stage окружение, например для stage выполнить (при этом, для prod нужно задать переменную source_ranges для доступа по ssh):
+
+```bash
+cd stage/
+cp terraform.tfvars{.example,}
+#configure terraform.tfvars here
+terraform init
+terraform apply -auto-approve
+```bash
+
+## 7.3 Как проверить
+В terraform/stage (или terraform/prod) выполнить
+```bash
+terraform output
+```bash
+будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip:9292 будет доступно приложение.
