@@ -171,13 +171,15 @@ app_external_ip = [ reddit-app-001-ip-address-here, reddit-app-002-ip-address-he
 Исходное состояние: установлены terraform (проверено на версии v0.11.7), packer (проверено на версии 1.2.4) с доступом к GCP
 
 Создать образы reddit-app, reddit-db через packer, предварительно настроив variables.json
+
 ```bash
 cd packer
 cp variables.json{.example,}
 #configure variables.json here
 packer build -var-file=variables.json db.json
 packer build -var-file=variables.json app.json
-```
+```bash
+
 cd -
 Создать бакеты для хранения state файла terraform, предварительно настроив terraform.tfvars
 

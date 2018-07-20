@@ -41,9 +41,9 @@ resource "null_resource" "app" {
     destination = "/tmp/puma.service"
   }
 
-  provisioner "remote-exec" {
+   provisioner "remote-exec" {
     inline = [
-      "echo DATABASE_URL=${var.db_address} | sudo tee -a /etc/default/puma",
+      "sudo echo DATABASE_URL=${var.db_address} > ${var.puma_env}",
     ]
   }
 

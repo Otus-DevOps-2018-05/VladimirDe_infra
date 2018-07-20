@@ -11,6 +11,11 @@ variable private_key_path {
   description = "Path to the private key used for ssh access"
 }
 
+variable "puma_env" {
+  description = "Path to env file for systemd puma unit"
+  default     = "/tmp/puma.env"
+}
+
 variable "app_disk_image" {
   description = "Disk image for reddit app"
   default     = "reddit-app-base"
