@@ -46,7 +46,7 @@ resource "null_resource" "app" {
     destination = "${var.puma_env}"
   }
 
-}
+
 
   provisioner "remote-exec" {
     script = "${path.module}/files/deploy.sh"
