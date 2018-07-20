@@ -41,11 +41,12 @@ resource "null_resource" "app" {
     destination = "/tmp/puma.service"
   }
 
-   provisioner "remote-exec" {
-    inline = [
-      "sudo echo DATABASE_URL=${var.db_address} > ${var.puma_env}",
-    ]
+  provisioner "file" {
+    content     = "DATABASE_URL=${var.db_address}"
+    destination = "${var.puma_env}"
   }
+
+}
 
   provisioner "remote-exec" {
     script = "${path.module}/files/deploy.sh"
