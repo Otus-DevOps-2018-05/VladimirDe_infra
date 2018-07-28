@@ -36,21 +36,21 @@ resource "null_resource" "app" {
     private_key = "${file(var.private_key_path)}"
   }
 
-  provisioner "file" {
-    source      = "${path.module}/files/puma.service"
-    destination = "/tmp/puma.service"
-  }
+#  provisioner "file" {
+#    source      = "${path.module}/files/puma.service"
+#    destination = "/tmp/puma.service"
+#  }
 
-  provisioner "file" {
-    content     = "DATABASE_URL=${var.db_address}"
-    destination = "${var.puma_env}"
-  }
+#  provisioner "file" {
+#    content     = "DATABASE_URL=${var.db_address}"
+#    destination = "${var.puma_env}"
+#  }
 
 
 
-  provisioner "remote-exec" {
-    script = "${path.module}/files/deploy.sh"
-  }
+#  provisioner "remote-exec" {
+#    script = "${path.module}/files/deploy.sh"
+#  }
 }
 
 resource "google_compute_address" "app_ip" {

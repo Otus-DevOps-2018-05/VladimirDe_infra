@@ -1,0 +1,63 @@
+---
+- name: Setup google cloud platform dynamic inventory via terraform inventory
+  hosts: localhost
+  connection: local
+
+  tasks:
+
+    - name: Install terraform inventory requirements
+      apt:
+        name: golang
+      become: true
+
+    - name: Clone terraform inventory repository
+      git:
+        repo: 'https://github.com/adammck/terraform-inventory.git'
+        dest: /tmp/terraform-inventory
+        depth: 1
+        version: master
+
+    #Compiled binary releases from https://github.com/adammck/terraform-inventory/releases
+    #don't support terraform remote tfstate file, so compile the latest version
+    # compile steps are taken from HomebrewFormula/terraform-inventory.rb
+    - name: Create go-style subdir
+      file:
+        path: /tmp/terraform-inventory/src/github.com/adammck/terraform-inventory
+        state: directory
+    
+    - name: Move contents of the repo into a go-style subdir
+      synchronize:
+        src: /tmp/terraform-inventory
+        dest: /tmp/terraform-inventory/src/github.com/adammck/
+
+    - name: Fetch the deps
+      command: go get
+      args:
+        chdir: /tmp/terraform-inventory/src/github.com/adammck/terraform-inventory
+      environment:
+        GOPATH: /tmp/terraform-inventory
+
+    - name: Compile terraform inventory binary file
+      command: bin/dist master
+      args:
+          chdir: /tmp/terraform-inventory
+      environment:
+        GOPATH: /tmp/terraform-inventory
+    
+    - name: Create ansible terraform dynamic inventory directory
+      file:
+        path: inventory_terraform
+        state: directory
+
+    - name: Copy terraform-inventory binary to inventory_terraform directory
+      unarchive:
+        src: /tmp/terraform-inventory/pkg/terraform-inventory_master_linux_amd64.zip
+        dest: inventory_terraform
+        mode: 0755
+
+    - name: Switch to ansible terraform dynamic inventory in ansible.cfg
+      ini_file:
+        path: ansible.cfg
+        section: defaults
+        option: inventory
+        value: ./inventory_terraform
