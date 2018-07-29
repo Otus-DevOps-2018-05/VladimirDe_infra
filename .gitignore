@@ -5,6 +5,6 @@ variables.json
 *.tfvars
 .terraform/
 .retry
-ansible/credentials/gce-service-account.json
 ansible/inventory_gce/*
 ansible/inventory_terraform/*
+ansible/Infra-75f73220d510.json
