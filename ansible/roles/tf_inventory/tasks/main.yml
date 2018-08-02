@@ -1,0 +1,61 @@
+---
+# tasks file for dynamic_inventory_setup
+- name: Set inventory directory prefix variable
+  set_fact:
+    tf_inventory_dir: "{{ tf_inventory_ansible_path }}/environments/{{ tf_inventory_env }}"
+
+- name: Install terraform inventory requirements
+  apt:
+    name: golang
+  become: true
+
+- name: Clone terraform inventory repository
+  git:
+    repo: 'https://github.com/adammck/terraform-inventory.git'
+    dest: /tmp/terraform-inventory
+    depth: 1
+    version: master
+
+#Compiled binary releases from https://github.com/adammck/terraform-inventory/releases
+#don't support terraform remote tfstate file, so compile the latest version
+# compile steps are taken from HomebrewFormula/terraform-inventory.rb
+- name: Create go-style subdir
+  file:
+    path: /tmp/terraform-inventory/src/github.com/adammck/terraform-inventory
+    state: directory
+
+- name: Move contents of the repo into a go-style subdir
+  synchronize:
+    src: /tmp/terraform-inventory
+    dest: /tmp/terraform-inventory/src/github.com/adammck/
+
+- name: Fetch the deps
+  command: go get -v
+  register: tf_inventory_go_get_result
+  args:
+    chdir: /tmp/terraform-inventory/src/github.com/adammck/terraform-inventory
+  environment:
+    GOPATH: /tmp/terraform-inventory
+  changed_when: tf_inventory_go_get_result.stderr | length != 0
+
+- name: Compile terraform inventory binary file
+  command: bin/dist master
+  register: tf_inventory_terraform_inventory_compile_result
+  args:
+      chdir: /tmp/terraform-inventory
+  environment:
+    GOPATH: /tmp/terraform-inventory
+  changed_when: True
+
+- name: Copy terraform-inventory binary to inventory_terraform directory
+  unarchive:
+    src: /tmp/terraform-inventory/pkg/terraform-inventory_master_linux_amd64.zip
+    dest: "{{ tf_inventory_dir }}"
+    mode: 0755
+
+- name: Switch to ansible terraform dynamic inventory in ansible.cfg
+  ini_file:
+    path: "{{ tf_inventory_ansible_path }}/ansible.cfg"
+    section: defaults
+    option: inventory
+    value: ./environments/{{ tf_inventory_env }}/terraform-inventory

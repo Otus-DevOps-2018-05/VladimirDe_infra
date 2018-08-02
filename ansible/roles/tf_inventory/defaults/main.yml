@@ -1,0 +1,6 @@
+---
+# defaults file for dynamic_inventory_setup
+
+tf_inventory_ansible_path: "{{ mandatory }}"
+tf_inventory_env: stage
+
