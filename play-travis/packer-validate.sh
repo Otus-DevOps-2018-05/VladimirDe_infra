@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 for TEMPLATE in packer/*.json;do
-    docker_packer packer/variables.json.example "${TEMPLATE}"
+    docker run -i  -t --volume $(pwd):/data --workdir /data packer-ansible validate -var-file=packer/variables.json.example ${TEMPLATE}
 done

@@ -6,6 +6,6 @@ for DIR in terraform/{,stage,prod};do
     echo "Initialize terraform in the ${DIR}"
     docker run -i --mount type=bind,source="$(pwd)"/terraform,target=/terraform \
     --mount type=bind,source="${HOME}"/.ssh,target=/root/.ssh \
-     --workdir /"${dir}" \
+     --workdir /"${DIR}" \
      -t hashicorp/terraform:light init -backend=false
 done
