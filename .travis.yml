@@ -15,7 +15,9 @@ services:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq python-apt python-pycurl
-  - docker build -t packer-ansible -f play-travis/Dockerfile-packer-ansible play-travis
+  - pwd
+  - docker --version
+  - docker build -t packer-ansible -f ./play-travis/Dockerfile-packer-ansible play-travis
   - curl https://raw.githubusercontent.com/express42/otus-homeworks/2018-05/run.sh | bash
 install:
   - sudo pip install -r ansible/requirements.txt
