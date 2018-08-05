@@ -9,3 +9,4 @@ ansible/inventory_gce/*
 ansible/inventory_terraform/*
 ansible/Infra-75f73220d510.json
 ansible/vault.key
+jdauphant.nginx
