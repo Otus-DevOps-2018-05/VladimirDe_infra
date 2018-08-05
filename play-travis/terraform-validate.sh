@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 for DIR in terraform/{,stage,prod};do
-    docker_terraform "${DIR}" validate
     docker run -i --mount type=bind,source="$(pwd)"/terraform,target=/terraform \
     --mount type=bind,source="${HOME}"/.ssh,target=/root/.ssh \
      --workdir /"${DIR}" \
