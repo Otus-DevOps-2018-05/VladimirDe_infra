@@ -205,5 +205,14 @@ terraform apply -auto-approve
 В terraform/stage (или terraform/prod) выполнить
 ```bash
 terraform output
-```bash
+```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip:9292 будет доступно приложение.
+
+## 10.3 Как проверить проект
+В README.md должен стоять бэйдж build passing
+
+В terraform/stage (или terraform/prod) выполнить
+```
+terraform output
+```
+будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip будет доступно приложение
