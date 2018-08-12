@@ -2,6 +2,17 @@
 
 [![Build Status](https://travis-ci.org/Otus-Devops_2018-05/VladimirDe-infra.svg?branch=master)]
 
+**Build status**
+
+master:
+[![Build Status](https://travis-ci.com/Otus-DevOps-2018-05/VladimirDe_infra.svg?branch=master)](https://travis-ci.com/Otus-DevOps-2018-05/VladmirDe_infra)
+
+ansible-4:
+[![Build Status](https://travis-ci.com/Otus-DevOps-2018-05/VladimirDe_infra.svg?branch=ansible-4)](https://travis-ci.com/Otus-DevOps-2018-05/VladimirDe_infra)
+
+db role:
+[![Build Status](https://travis-ci.org/Vladimir/ansible-role-mongodb.svg?branch=master)](https://travis-ci.org/VladmirDe/ansible-role-mongodb)
+
 ## Подключение через ssh к инстансам в GCP через bastion хост
 ### Начальные данные
 * bastion
