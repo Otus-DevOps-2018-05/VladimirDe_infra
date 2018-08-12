@@ -1,5 +1,6 @@
 # Vladimir Denisov infra
 
+[![Build Status](https://travis-ci.org/Otus-Devops_2018-05/VladimirDe-infra.svg?branch=master)]
 
 ## Подключение через ssh к инстансам в GCP через bastion хост
 ### Начальные данные
@@ -216,3 +217,110 @@ terraform output
 terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip будет доступно приложение
+
+# Homework-11: Разработка и тестирование Ansible ролей и плейбуков
+## 11.1 Что было сделано
+Основные задания:
+
+Локальная разработка при помощи Vagrant - в Vagrantfile описаны конфигурации appserver, dbserver
+
+Добавлен плейбук base.yml для ansible bootstrap на хостах, где не установлен python
+
+Доработана роль db для использования в Vagrant, в которую добавлены таски config_mongo.yml, install_mongo.yml
+
+В Vagrantfile добавлены ansible провижинеры для appserver и dbserver
+
+Добавлены тесты роли db через molecula и testinfra
+
+## Задания со *:
+
+Добавлено dev окружение, в котором настроена параметризация конфигурации appserver в Vagrant
+
+Роль db перемещена в отдельный репозиторий loktionovam/db, роль db импортирована в ansible galaxy и подключена через файл зависимостей requirements.yml для stage и prod окружений
+
+Для роли db настроен запуск тестов molecule/testinfra в GCE через travis ci после пуша в репозиторий, в README.md роли добавлен бэйдж статуса сборки, включена интеграция билдов travis ci со slack каналом интеграции
+
+## 11.2 Как запустить проект
+### 11.2.1 Репозиторий ansible роли db
+Запуск тестов вручную без travis
+
+Склонировать репозиторий
+git clone git@github.com:VladimirDe/ansible-role-mongodb.git
+cd ansible-role-mongodb
+Предполагается, что ssh ключи для подключения к инстансам GCE лежат в ~/.ssh/google_compute_engine{,pub}
+ssh-keygen -t rsa -f google_compute_engine -C 'travis' -q -N ''
+Как загрузить ключи в GCP описано здесь https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys
+
+Генерируем сервисный аккаунт
+
+gcloud iam service-accounts create travis --display-name travis
+Создаем файл с секретной информацией для подключения сервисного аккаунта
+gcloud iam service-accounts keys create ./credentials.json --iam-account travis@infra-207406.iam.gserviceaccount.com
+Добавляем роли для сервисного аккаунта
+
+gcloud projects add-iam-policy-binding infra-208603 --member serviceAccount:travis@infra-208603.iam.gserviceaccount.com --role roles/editor
+Примечание1: здесь указана роль roles/editor у которой достаточно много полномочий, возможно стоит указать роль с меньшими полномочиями
+
+Запуск тестов molecule в GCE (нужно заменить infra-some-project-id на реальный проект)
+export P_ID=infra-some-project-id
+USER=travis GCE_SERVICE_ACCOUNT_EMAIL=travis@${P_ID}.iam.gserviceaccount.com GCE_CREDENTIALS_FILE=$(pwd)/credentials.json GCE_PROJECT_ID=${P_ID} molecule test
+Настройка интеграции с travis ci (ВАЖНО!!!: если для проверок используется временный репозиторий (в примерах это trytravis-db-role), то нужно везде указывать имя репозитория при шифровании секретных данных, также нужно временно сменить имя роли на trytravis-db-role в molecule playbook)
+
+travis encrypt 'GCE_SERVICE_ACCOUNT_EMAIL=travis@infra-208603.iam.gserviceaccount.com' --repo VladimirDe/ansible-role-mongodb
+travis encrypt GCE_CREDENTIALS_FILE=\$TRAVIS_BUILD_DIR/credentials.json --repo VladimirDe/ansible-role-mongodb
+travis encrypt 'GCE_PROJECT_ID=infra-208603' --repo VladimirDe/ansible-role-mongodb
+travis login --org --repo VladimirDe/ansible-role-mongodb
+tar cvf secrets.tar credentials.json google_compute_engine
+travis encrypt-file secrets.tar --repo VladimirDe/ansible-role-mongodb --add
+
+### Проверить и поправить файл .travis.yml - после автоматического добавления шифрованных данных через travis encrypt линтер начинает выдавать ошибки
+```
+molecule lint
+```
+После того, как все ошибки будут исправлены через trytravis, нужно перешифровать все данные, но уже для основного репозитория (повторить предыдущие шаги, но без ключа --repo)
+
+Интеграция со slack каналом
+
+travis encrypt "devops-team-otus:some-secret-info" --add notifications.slack -r VladimirDe/ansible-role-mongodb
+molecule lint
+### Если нужно, то поправить .travis.yml
+11.2.2 Интеграция роли db с ansible galaxy
+Зарегистрироваться на ansible galaxy
+
+Настроить метаданные роли (author, description, license, tags, platforms, company) в meta/main.yml
+```
+---
+dependencies: []
+galaxy_info:
+  author: VladimirDe
+  description: mongo database for Ubuntu Xenial
+  company: Gotechsoftware
+  license: MIT
+  min_ansible_version: 2.4
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+  galaxy_tags:
+    - mongo
+```
+Импортировать роль в ansible galaxy, используя web-интерфейс Ansible galaxy
+
+## 11.2.3 Запуск dev окружения
+Запустить проект в dev окружении (appserver, dbserver)
+```
+cd ansible
+ansible-galaxy install -r environments/dev/requirements.yml
+vagrant up
+```
+Удалить dev окружение
+```
+vagrant destroy
+```
+## 11.3 Как проверить проект
+appserver, dbserver должны быть доступны по ssh
+```
+vagrant ssh appserver
+vagrant ssh dbserver
+```
+В браузере должно открываться reddit приложение по адресу http://10.10.10.20/
