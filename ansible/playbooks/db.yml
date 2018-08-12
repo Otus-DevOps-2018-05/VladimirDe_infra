@@ -3,4 +3,4 @@
   hosts: tag_reddit-db
   become: true
   roles:
-    - vladimirde.ansible_role_mongodb
+    - db
