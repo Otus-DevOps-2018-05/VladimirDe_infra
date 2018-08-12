@@ -1,7 +1,5 @@
 # Vladimir Denisov infra
 
-[![Build Status](https://travis-ci.org/Otus-Devops_2018-05/VladimirDe-infra.svg?branch=master)]
-
 **Build status**
 
 master:
@@ -184,38 +182,38 @@ app_external_ip = [ reddit-app-001-ip-address-here, reddit-app-002-ip-address-he
 
 Создать образы reddit-app, reddit-db через packer, предварительно настроив variables.json
 
-```bash
+```
 cd packer
 cp variables.json{.example,}
 #configure variables.json here
 packer build -var-file=variables.json db.json
 packer build -var-file=variables.json app.json
-```bash
+```
 
 cd -
 Создать бакеты для хранения state файла terraform, предварительно настроив terraform.tfvars
 
-```bash
+```
 cd terraform
 cp terraform.tfvars{.example,}
 #configure terraform.tfvars here
 terraform init
 terraform apply -auto-approve
-```bash
+```
 
 Создать prod/stage окружение, например для stage выполнить (при этом, для prod нужно задать переменную source_ranges для доступа по ssh):
 
-```bash
+```
 cd stage/
 cp terraform.tfvars{.example,}
 #configure terraform.tfvars here
 terraform init
 terraform apply -auto-approve
-```bash
+```
 
 ## 7.3 Как проверить
 В terraform/stage (или terraform/prod) выполнить
-```bash
+```
 terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip:9292 будет доступно приложение.
@@ -247,7 +245,7 @@ terraform output
 
 Добавлено dev окружение, в котором настроена параметризация конфигурации appserver в Vagrant
 
-Роль db перемещена в отдельный репозиторий loktionovam/db, роль db импортирована в ansible galaxy и подключена через файл зависимостей requirements.yml для stage и prod окружений
+Роль db перемещена в отдельный репозиторий VladimirDe/ansible-role-mongodb, роль db импортирована в ansible galaxy и подключена через файл зависимостей requirements.yml для stage и prod окружений
 
 Для роли db настроен запуск тестов molecule/testinfra в GCE через travis ci после пуша в репозиторий, в README.md роли добавлен бэйдж статуса сборки, включена интеграция билдов travis ci со slack каналом интеграции
 
@@ -270,7 +268,7 @@ gcloud iam service-accounts create travis --display-name travis
 ```
 Создаем файл с секретной информацией для подключения сервисного аккаунта
 ```
-gcloud iam service-accounts keys create ./credentials.json --iam-account travis@infra-207406.iam.gserviceaccount.com
+gcloud iam service-accounts keys create ./credentials.json --iam-account travis@infra-208603.iam.gserviceaccount.com
 ```
 Добавляем роли для сервисного аккаунта
 ```
