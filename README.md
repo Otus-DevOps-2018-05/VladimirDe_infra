@@ -135,7 +135,7 @@ Usage: create-reddit-vm.sh [-n INSTANCE_NAME] [-i IMAGE_FAMILY]>'
 ## Настройка HTTP балансировщика для пары хостов reddit-app, reddit-app2
 После добавления reddit-app2 и настройки http балансировщика через terraform есть проблема, которая заключается в том, что приложение reddit-app это statefull приложение, т.е. у него есть состояние (мы храним его в mongodb), которое балансировка не учитывает. В этом легко убедиться, если создать статью и сравнить БД на reddit-app и reddit-app2:
 
-```bash
+```
 reddit-app:~# mongo
 MongoDB shell version: 3.2.20
 connecting to: test
@@ -150,7 +150,7 @@ connecting to: test
 local       0.000GB
 user_posts  0.000GB
 >
-```bash
+
 
 т.е. пользователь будет получать разный ответ в зависимости от того, на какой бэкенд он попал. Решения:
 
@@ -172,41 +172,41 @@ app_external_ip = [ reddit-app-001-ip-address-here, reddit-app-002-ip-address-he
 
 Создать образы reddit-app, reddit-db через packer, предварительно настроив variables.json
 
-```bash
+```
 cd packer
 cp variables.json{.example,}
 #configure variables.json here
 packer build -var-file=variables.json db.json
 packer build -var-file=variables.json app.json
-```bash
+```
 
 cd -
 Создать бакеты для хранения state файла terraform, предварительно настроив terraform.tfvars
 
-```bash
+```
 cd terraform
 cp terraform.tfvars{.example,}
 #configure terraform.tfvars here
 terraform init
 terraform apply -auto-approve
-```bash
+```
 
 Создать prod/stage окружение, например для stage выполнить (при этом, для prod нужно задать переменную source_ranges для доступа по ssh):
 
-```bash
+```
 cd stage/
 cp terraform.tfvars{.example,}
 #configure terraform.tfvars here
 terraform init
 terraform apply -auto-approve
-```bash
-
+```
 ## 7.3 Как проверить
 В terraform/stage (или terraform/prod) выполнить
 ```bash
 terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip:9292 будет доступно приложение.
+
 
 ## 10.3 Как проверить проект
 В README.md должен стоять бэйдж build passing
@@ -216,3 +216,58 @@ terraform output
 terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip будет доступно приложение
+
+# Homework-8: Управление конфигурацией. Основные DevOps инструменты. Знакомство с Ansible
+## 8.1 Что было сделано
+### Основные задания:
+
+- Установка и знакомство с базовыми функциями ansible
+- Написание простых плейбуков
+- Задания со *: Создание inventory в формате json
+
+## 8.2 Как запустить проект
+Развернуть stage через terraform (см. 7.2 Как запустить проект), после чего перейти в каталог ansible и запустить плейбук, клонирующий репозиторий reddit на app сервер
+```
+cd ansible
+ansible-playbook clone.yml
+```
+Повторный запуск плейбука идемпотентен, т.е. повторно клонироваться репозиторий не будет (changed=0)
+
+ansible-playbook clone.yml
+...
+appserver                  : ok=2    changed=0    unreachable=0    failed=0
+Но если удалить склонированный репозиторий
+
+ansible app -m command -a 'rm -rf ~/reddit'
+ [WARNING]: Consider using file module with state=absent rather than running rm
+
+appserver | SUCCESS | rc=0 >>
+то исполнение плейбука склонирует репозиторий заново (changed=1)
+
+ansible-playbook clone.yml
+...
+appserver                  : ok=2    changed=1    unreachable=0    failed=0
+Для запуска ansible с использованием inventory в формате json нужен инвентори-скрипт, который в самом простом случае при вызове с ключом --list должен выводить хосты в json формате. Например, если у нас уже есть inventory.json, то передать его ansible можно таким скриптом inventory_json
+```bash
+#!/usr/bin/env bash
+
+if [ "$1" = "--list" ] ; then
+    cat $(dirname "$0")/inventory.json
+elif [ "$1" = "--host" ]; then
+    echo "{}"
+fi
+```
+
+```
+ansible -i inventory_json all -m ping
+```
+Чтобы не указывать inventory_json, его можно добавить в ansible.cfg
+```
+inventory =./inventory_json
+```
+
+## 8.3 Как проверить
+После выполнения плейбука clone.yml можно проверить, что репозиторий действительно склонировался, например командой
+```
+ansible appserver -m command  -a "git log -1 chdir=/home/appuser/reddit"
+```
