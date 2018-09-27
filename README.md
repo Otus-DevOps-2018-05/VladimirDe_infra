@@ -271,3 +271,4 @@ inventory =./inventory_json
 ```
 ansible appserver -m command  -a "git log -1 chdir=/home/appuser/reddit"
 ```
+
