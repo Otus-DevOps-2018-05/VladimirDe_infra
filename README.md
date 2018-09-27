@@ -178,7 +178,7 @@ cp variables.json{.example,}
 #configure variables.json here
 packer build -var-file=variables.json db.json
 packer build -var-file=variables.json app.json
-```bash
+```
 
 cd -
 Создать бакеты для хранения state файла terraform, предварительно настроив terraform.tfvars
@@ -189,7 +189,7 @@ cp terraform.tfvars{.example,}
 #configure terraform.tfvars here
 terraform init
 terraform apply -auto-approve
-```bash
+```
 
 Создать prod/stage окружение, например для stage выполнить (при этом, для prod нужно задать переменную source_ranges для доступа по ssh):
 
@@ -200,6 +200,7 @@ cp terraform.tfvars{.example,}
 terraform init
 terraform apply -auto-approve
 ```
+
 ## 7.3 Как проверить
 В terraform/stage (или terraform/prod) выполнить
 ```bash
@@ -207,6 +208,53 @@ terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip:9292 будет доступно приложение.
 
+
+# Homework-9: Деплой и управление конфигурацией с Ansible
+## 9.1 Что было сделано
+Основные задания:
+
+- Создание плейбуков ansible для конфигурирования и деплоя reddit приложения (site.yml, db.yml, app.yml, deploy.yml)
+- Создание плейбуков ansible (packer_db.yml, packer_app.yml), их использование в packer
+- Задания со *:
+
+## Исследование возможности использования dynamic inventory в GCP через contrib модуль ansible (gce.py) и terraform state file
+Настройка dynamic inventory (выбран и используется gce.py). Дополнительно написаны ansible плейбуки для конфигурирования dynamic inventory (terraform_dynamic_inventory_setup.yml, gce_dynamic_inventory_setup.yml)
+## 9.2 Как запустить проект
+Предварительные действия: развернуть stage (см. 7.2 Как запустить проект)
+
+### 9.2.1 Настройка динамического inventory через gce.py (основной способ, используется в плейбуках раздела 9.2.3)
+Преимущества: поставляется вместе с ansible; проще в настройке
+
+Недостатки: это inventory только для GCE
+
+Нужно создать сервисный аккаунт в GCE, скачать credential file в формате json и указать к нему путь во время исполнения gce_dynamic_inventory_setup.yml
+
+cd ansible
+ansible-playbook gce_dynamic_inventory_setup.yml
+Enter path to GCE service account pem file [credentials/gce-service-account.json]:
+Посмотреть хосты динамического inventory через gce.py можно так:
+```bash
+sudo apt-get install jq
+./inventory_gce/gce.py --list | jq .
+```
+### 9.2.2 Настройка динамического inventory через terraform-inventory
+Не удалось
+Сообщение об ошибке при компиляции:
+```bash
+TASK [Compile terraform inventory binary file] *****************************************************************************************************************************
+fatal: [localhost]: FAILED! => {"changed": true, "cmd": ["bin/dist", "master"], "delta": "0:00:00.635740", "end": "2018-07-29 08:41:29.544858", "msg": "non-zero return code", "rc": 127, "start": "2018-07-29 08:41:28.909118", "stderr": "bin/dist: line 26: zip: command not found", "stderr_lines": ["bin/dist: line 26: zip: command not found"], "stdout": "/tmp/terraform-inventory/pkg /tmp/terraform-inventory", "stdout_lines": ["/tmp/terraform-inventory/pkg /tmp/terraform-inventory"]}
+```
+Компилировалось на WSL - возможно это корень проблемы (не нативная Unix)
+
+
+### 9.2.3 Конфигурация и деплой приложения
+Выполняем 9.2.1 Настройка динамического inventory через gce.py
+
+cd ansible
+ansible-playbook site.yml
+## 9.3 Как проверить проект
+Описано в 7.3 Как проверить
+=======
 # Homework-8: Управление конфигурацией. Основные DevOps инструменты. Знакомство с Ansible
 ## 8.1 Что было сделано
 ### Основные задания:
@@ -261,3 +309,4 @@ inventory =./inventory_json
 ```bash
 ansible appserver -m command  -a "git log -1 chdir=/home/appuser/reddit"
 ```
+
