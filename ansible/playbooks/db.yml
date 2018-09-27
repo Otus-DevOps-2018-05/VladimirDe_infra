@@ -1,16 +1,6 @@
 ---
 - name: Configure MongoDB
-  hosts:
-    - tag_reddit-db
-    - db
-
-  pre_tasks:
-    - name: Create ad-hoc db group
-      group_by: key="db"
-
-    - name: Print hostvars
-      debug:
-        var: hostvars[inventory_hostname]
-
+  hosts: tag_reddit-db
+  become: true
   roles:
     - db

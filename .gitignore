@@ -18,4 +18,3 @@ jdauphant.nginx
 .cache
 .pytest_cache
 .yamlint
-*/molecule
