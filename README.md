@@ -218,6 +218,7 @@ terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip:9292 будет доступно приложение.
 
+
 ## 10.3 Как проверить проект
 В README.md должен стоять бэйдж build passing
 
@@ -342,3 +343,106 @@ vagrant ssh appserver
 vagrant ssh dbserver
 ```
 В браузере должно открываться reddit приложение по адресу http://10.10.10.20/
+=======
+
+# Homework-9: Деплой и управление конфигурацией с Ansible
+## 9.1 Что было сделано
+Основные задания:
+
+- Создание плейбуков ansible для конфигурирования и деплоя reddit приложения (site.yml, db.yml, app.yml, deploy.yml)
+- Создание плейбуков ansible (packer_db.yml, packer_app.yml), их использование в packer
+- Задания со *:
+
+## Исследование возможности использования dynamic inventory в GCP через contrib модуль ansible (gce.py) и terraform state file
+Настройка dynamic inventory (выбран и используется gce.py). Дополнительно написаны ansible плейбуки для конфигурирования dynamic inventory (terraform_dynamic_inventory_setup.yml, gce_dynamic_inventory_setup.yml)
+## 9.2 Как запустить проект
+Предварительные действия: развернуть stage (см. 7.2 Как запустить проект)
+
+### 9.2.1 Настройка динамического inventory через gce.py (основной способ, используется в плейбуках раздела 9.2.3)
+Преимущества: поставляется вместе с ansible; проще в настройке
+
+Недостатки: это inventory только для GCE
+
+Нужно создать сервисный аккаунт в GCE, скачать credential file в формате json и указать к нему путь во время исполнения gce_dynamic_inventory_setup.yml
+
+cd ansible
+ansible-playbook gce_dynamic_inventory_setup.yml
+Enter path to GCE service account pem file [credentials/gce-service-account.json]:
+Посмотреть хосты динамического inventory через gce.py можно так:
+```bash
+sudo apt-get install jq
+./inventory_gce/gce.py --list | jq .
+```
+### 9.2.2 Настройка динамического inventory через terraform-inventory
+Не удалось
+Сообщение об ошибке при компиляции:
+```bash
+TASK [Compile terraform inventory binary file] *****************************************************************************************************************************
+fatal: [localhost]: FAILED! => {"changed": true, "cmd": ["bin/dist", "master"], "delta": "0:00:00.635740", "end": "2018-07-29 08:41:29.544858", "msg": "non-zero return code", "rc": 127, "start": "2018-07-29 08:41:28.909118", "stderr": "bin/dist: line 26: zip: command not found", "stderr_lines": ["bin/dist: line 26: zip: command not found"], "stdout": "/tmp/terraform-inventory/pkg /tmp/terraform-inventory", "stdout_lines": ["/tmp/terraform-inventory/pkg /tmp/terraform-inventory"]}
+```
+Компилировалось на WSL - возможно это корень проблемы (не нативная Unix)
+
+
+### 9.2.3 Конфигурация и деплой приложения
+Выполняем 9.2.1 Настройка динамического inventory через gce.py
+
+cd ansible
+ansible-playbook site.yml
+## 9.3 Как проверить проект
+Описано в 7.3 Как проверить
+=======
+# Homework-8: Управление конфигурацией. Основные DevOps инструменты. Знакомство с Ansible
+## 8.1 Что было сделано
+### Основные задания:
+
+- Установка и знакомство с базовыми функциями ansible
+- Написание простых плейбуков
+- Задания со *: Создание inventory в формате json
+
+## 8.2 Как запустить проект
+Развернуть stage через terraform (см. 7.2 Как запустить проект), после чего перейти в каталог ansible и запустить плейбук, клонирующий репозиторий reddit на app сервер
+```bash
+cd ansible
+ansible-playbook clone.yml
+```
+Повторный запуск плейбука идемпотентен, т.е. повторно клонироваться репозиторий не будет (changed=0)
+
+ansible-playbook clone.yml
+...
+appserver                  : ok=2    changed=0    unreachable=0    failed=0
+Но если удалить склонированный репозиторий
+
+ansible app -m command -a 'rm -rf ~/reddit'
+ [WARNING]: Consider using file module with state=absent rather than running rm
+
+appserver | SUCCESS | rc=0 >>
+то исполнение плейбука склонирует репозиторий заново (changed=1)
+
+ansible-playbook clone.yml
+...
+appserver                  : ok=2    changed=1    unreachable=0    failed=0
+Для запуска ansible с использованием inventory в формате json нужен инвентори-скрипт, который в самом простом случае при вызове с ключом --list должен выводить хосты в json формате. Например, если у нас уже есть inventory.json, то передать его ansible можно таким скриптом inventory_json
+```bash
+#!/usr/bin/env bash
+
+if [ "$1" = "--list" ] ; then
+    cat $(dirname "$0")/inventory.json
+elif [ "$1" = "--host" ]; then
+    echo "{}"
+fi
+```
+
+```bash
+ansible -i inventory_json all -m ping
+```
+Чтобы не указывать inventory_json, его можно добавить в ansible.cfg
+```bash
+inventory =./inventory_json
+```
+
+## 8.3 Как проверить
+После выполнения плейбука clone.yml можно проверить, что репозиторий действительно склонировался, например командой
+```bash
+ansible appserver -m command  -a "git log -1 chdir=/home/appuser/reddit"
+```
+
