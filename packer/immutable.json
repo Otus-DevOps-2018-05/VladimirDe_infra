@@ -39,7 +39,7 @@
         },
         {
             "type": "file",
-            "source": "files/{{user `app_name`}}.service",
+            "source": "./packer/files/{{user `app_name`}}.service",
             "destination": "{{user `app_name`}}.service"
         },
         {

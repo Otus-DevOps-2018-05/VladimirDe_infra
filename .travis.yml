@@ -5,6 +5,34 @@ cache: false
 before_install:
 - curl https://raw.githubusercontent.com/express42/otus-homeworks/2018-05/run.sh |
   bash
+
+dist: trusty
+sudo: required
+language: bash
+services:
+  - docker
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq python-apt python-pycurl
+  - docker build -t packer-ansible -f ./play-travis/Docker-packer-ansible play-travis
+  - curl https://raw.githubusercontent.com/express42/otus-homeworks/2018-05/run.sh | bash
+install:
+  - sudo pip install -r ansible/requirements.txt
+  - ansible --version
+  - ansible-lint --version
+  - docker --version
+
+before_script:
+  - play-travis/terraform-init.sh
+  - ssh-keygen -f ~/.ssh/appuser -q -N ""
+
+script:
+  - play-travis/packer-validate.sh
+  - play-travis/tflint.sh
+  - play-travis/terraform-validate.sh
+  - ansible-lint -v ansible/playbooks/*.yml
+
 notifications:
   slack:
     rooms:

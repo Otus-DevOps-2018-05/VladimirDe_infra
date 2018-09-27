@@ -1,0 +1,6 @@
+FROM hashicorp/packer:light
+
+RUN apk add --update ansible
+ENV USER root
+
+ENTRYPOINT ["/bin/packer"]

@@ -1,0 +1,16 @@
+---
+- name: Setup google cloud platform dynamic inventory via terraform inventory
+  hosts: localhost
+  connection: local
+
+  vars_prompt:
+
+    - name: "env"
+      prompt: Enter environment (stage/prod)
+      default: stage
+      private: no
+
+  roles:
+    - role: tf_inventory
+      tf_inventory_ansible_path: "{{ playbook_dir }}/.."
+      tf_inventory_env: "{{ env }}"

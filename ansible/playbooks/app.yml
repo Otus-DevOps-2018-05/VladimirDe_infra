@@ -1,0 +1,14 @@
+- name: Configure App
+  hosts:
+    - tag_reddit-app
+    - app
+  become: true
+
+  pre_tasks:
+    - name: Create ad-hoc app group
+      group_by:
+        key: "app"
+
+  roles:
+    - app
+    - jdauphant.nginx
