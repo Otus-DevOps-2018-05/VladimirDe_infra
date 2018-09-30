@@ -210,7 +210,6 @@ cp terraform.tfvars{.example,}
 terraform init
 terraform apply -auto-approve
 ```
-
 ## 7.3 Как проверить
 В terraform/stage (или terraform/prod) выполнить
 ```
@@ -227,6 +226,7 @@ terraform output
 terraform output
 ```
 будут выведены переменные app_external_ip, db_external_ip, при этом по адресу http://app_external_ip будет доступно приложение
+
 
 # Homework-11: Разработка и тестирование Ansible ролей и плейбуков
 ## 11.1 Что было сделано
@@ -343,7 +343,7 @@ vagrant ssh appserver
 vagrant ssh dbserver
 ```
 В браузере должно открываться reddit приложение по адресу http://10.10.10.20/
-=======
+
 
 # Homework-9: Деплой и управление конфигурацией с Ansible
 ## 9.1 Что было сделано
@@ -390,7 +390,7 @@ cd ansible
 ansible-playbook site.yml
 ## 9.3 Как проверить проект
 Описано в 7.3 Как проверить
-=======
+
 # Homework-8: Управление конфигурацией. Основные DevOps инструменты. Знакомство с Ansible
 ## 8.1 Что было сделано
 ### Основные задания:
@@ -401,7 +401,8 @@ ansible-playbook site.yml
 
 ## 8.2 Как запустить проект
 Развернуть stage через terraform (см. 7.2 Как запустить проект), после чего перейти в каталог ansible и запустить плейбук, клонирующий репозиторий reddit на app сервер
-```bash
+
+```
 cd ansible
 ansible-playbook clone.yml
 ```
@@ -432,17 +433,24 @@ elif [ "$1" = "--host" ]; then
 fi
 ```
 
-```bash
+```
 ansible -i inventory_json all -m ping
 ```
 Чтобы не указывать inventory_json, его можно добавить в ansible.cfg
-```bash
+```
+
+```
+ansible -i inventory_json all -m ping
+```
+Чтобы не указывать inventory_json, его можно добавить в ansible.cfg
+```
 inventory =./inventory_json
 ```
 
 ## 8.3 Как проверить
 После выполнения плейбука clone.yml можно проверить, что репозиторий действительно склонировался, например командой
-```bash
+
+```
 ansible appserver -m command  -a "git log -1 chdir=/home/appuser/reddit"
 ```
 
